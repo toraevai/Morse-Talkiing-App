@@ -1,22 +1,26 @@
 package com.example.morsetalking.camera
 
-import android.graphics.SurfaceTexture
-import android.hardware.Camera
 import android.hardware.camera2.CameraManager
 import android.os.Build
 import androidx.annotation.RequiresApi
-import java.io.IOException
+import javax.inject.Inject
 
-class MorseCamera(private val cameraManager: CameraManager) {
+class MorseCamera @Inject constructor() {
+
+    @Inject
+    lateinit var cameraManager: CameraManager
 
     private val cameraId = cameraManager.cameraIdList[0]
-    val camera: Camera = Camera.open()
-    val parameters = camera.parameters
+    /*val camera = Camera.open()
+    val parameters = camera.parameters*/
 
+    @RequiresApi(Build.VERSION_CODES.M)
     fun enableFlashLight() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        cameraManager.setTorchMode(cameraId, true)
+
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             cameraManager.setTorchMode(cameraId, true)
-        } else {
+        } *//*else {
             parameters.flashMode = Camera.Parameters.FLASH_MODE_TORCH
             camera.parameters = parameters
             val texture = SurfaceTexture(0)
@@ -26,17 +30,17 @@ class MorseCamera(private val cameraManager: CameraManager) {
                 e.printStackTrace()
             }
             camera.startPreview()
-        }
+        }*/
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
     fun disableFlashLight() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        cameraManager.setTorchMode(cameraId, false)
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             cameraManager.setTorchMode(cameraId, false)
-        } else {
+        } *//*else {
             parameters.flashMode = Camera.Parameters.FLASH_MODE_OFF
             camera.stopPreview()
-            camera.release()
-        }
+        }*/
     }
 }

@@ -8,20 +8,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.morsetalking.MorseTalkingApp
 import com.example.morsetalking.camera.MorseCamera
 import com.example.morsetalking.data.symbols
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MorseScreenViewModel(
-    private val morseCamera: MorseCamera
-) : ViewModel() {
+
+@HiltViewModel
+class MorseScreenViewModel @Inject constructor() : ViewModel() {
+
+    @Inject lateinit var morseCamera: MorseCamera
+
     var message by mutableStateOf("")
     var dotDuration: Long by mutableStateOf(200)
 
@@ -58,14 +58,5 @@ class MorseScreenViewModel(
                 .show()
             100
         } else duration
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val application = (this[APPLICATION_KEY] as MorseTalkingApp)
-                MorseScreenViewModel(application.morseCamera)
-            }
-        }
     }
 }
