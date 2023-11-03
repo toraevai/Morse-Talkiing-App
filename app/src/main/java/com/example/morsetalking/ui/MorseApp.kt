@@ -19,7 +19,9 @@ import com.example.morsetalking.ui.theme.MorseTalkingTheme
 
 @RequiresApi(Build.VERSION_CODES.M)
 @Composable
-fun MorseApp(viewModel: MorseScreenViewModel) {
+fun MorseApp(
+    viewModel: MorseScreenViewModel
+) {
     val context = LocalContext.current
     MorseScreen(
         message = viewModel.message,

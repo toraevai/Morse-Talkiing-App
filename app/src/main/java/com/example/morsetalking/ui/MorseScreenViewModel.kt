@@ -18,9 +18,9 @@ import javax.inject.Inject
 
 
 @HiltViewModel
-class MorseScreenViewModel @Inject constructor() : ViewModel() {
-
-    @Inject lateinit var morseCamera: MorseCamera
+class MorseScreenViewModel @Inject constructor(
+    private val morseCamera: MorseCamera
+) : ViewModel() {
 
     var message by mutableStateOf("")
     var dotDuration: Long by mutableStateOf(200)

@@ -5,10 +5,9 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import javax.inject.Inject
 
-class MorseCamera @Inject constructor() {
-
-    @Inject
-    lateinit var cameraManager: CameraManager
+class MorseCamera @Inject constructor(
+    private val cameraManager: CameraManager
+) {
 
     private val cameraId = cameraManager.cameraIdList[0]
     /*val camera = Camera.open()
