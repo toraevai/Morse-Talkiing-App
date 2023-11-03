@@ -1,9 +1,7 @@
 package com.example.morsetalking.ui
 
 import android.content.Context
-import android.os.Build
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -25,7 +23,6 @@ class MorseScreenViewModel @Inject constructor(
     var message by mutableStateOf("")
     var dotDuration: Long by mutableStateOf(200)
 
-    @RequiresApi(Build.VERSION_CODES.M)
     fun sendMessage() {
         viewModelScope.launch {
             for (symbol in message) {
