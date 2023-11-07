@@ -21,39 +21,47 @@ class MorseScreenViewModel @Inject constructor(
 ) : ViewModel() {
 
     var message by mutableStateOf("")
-    var dotDuration: Long by mutableStateOf(200)
+        private set
 
-    fun sendMessage() {
-        viewModelScope.launch {
-            for (symbol in message) {
-                if (symbol.toString().contains(" ")) {
-                    morseCamera.disableFlashLight()
-                    delay(7 * dotDuration)
-                } else {
-                    val morseCode: String = symbols.find {
-                        it.symbol.contains(symbol.uppercase())
-                    }!!.code
-                    for (morseSymbol in morseCode) {
-                        if (morseSymbol.toString().contains("0")) {
-                            morseCamera.disableFlashLight()
-                            delay(dotDuration)
-                        } else {
-                            morseCamera.enableFlashLight()
-                            delay(dotDuration)
+    var dotDuration by mutableStateOf("200")
+        private set
+
+    fun changeMessage(text: String) {
+        message = text
+    }
+
+    fun sendMessage(context: Context) {
+        if (dotDuration.isEmpty() || dotDuration.toInt() < 100) {
+            Toast.makeText(context, "Длительность не может быть меньше 100мс.", Toast.LENGTH_SHORT)
+                .show()
+        } else {
+            viewModelScope.launch {
+                for (symbol in message) {
+                    if (symbol.toString().contains(" ")) {
+                        morseCamera.disableFlashLight()
+                        delay(7 * dotDuration.toLong())
+                    } else {
+                        val morseCode: String = symbols.find {
+                            it.symbol.contains(symbol.uppercase())
+                        }!!.code
+                        for (morseSymbol in morseCode) {
+                            if (morseSymbol.toString().contains("0")) {
+                                morseCamera.disableFlashLight()
+                                delay(dotDuration.toLong())
+                            } else {
+                                morseCamera.enableFlashLight()
+                                delay(dotDuration.toLong())
+                            }
                         }
                     }
+                    morseCamera.disableFlashLight()
+                    delay(dotDuration.toLong() * 3)
                 }
-                morseCamera.disableFlashLight()
-                delay(dotDuration * 3)
             }
         }
     }
 
-    fun changeDotDuration(duration: Long, context: Context) {
-        dotDuration = if (duration < 100) {
-            Toast.makeText(context, "Длительность не может быть меньше 100мс.", Toast.LENGTH_SHORT)
-                .show()
-            100
-        } else duration
+    fun changeDotDuration(duration: String) {
+        dotDuration = duration
     }
 }

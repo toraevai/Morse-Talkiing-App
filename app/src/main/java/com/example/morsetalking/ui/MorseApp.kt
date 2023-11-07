@@ -1,8 +1,11 @@
 package com.example.morsetalking.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -11,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.morsetalking.ui.theme.MorseTalkingTheme
@@ -23,9 +27,9 @@ fun MorseApp(
     MorseScreen(
         message = viewModel.message,
         dotDuration = viewModel.dotDuration,
-        onMessageChange = { viewModel.message = it },
-        onClick = { viewModel.sendMessage() },
-        onDotDurationChange = { viewModel.changeDotDuration(it.toLong(), context) }
+        onMessageChange = { viewModel.changeMessage(it) },
+        onClick = { viewModel.sendMessage(context) },
+        onDotDurationChange = { viewModel.changeDotDuration(it) }
     )
 }
 
@@ -33,7 +37,7 @@ fun MorseApp(
 @Composable
 fun MorseScreen(
     message: String,
-    dotDuration: Long,
+    dotDuration: String,
     onMessageChange: (String) -> Unit,
     onClick: () -> Unit,
     onDotDurationChange: (String) -> Unit
@@ -52,17 +56,18 @@ fun MorseScreen(
         Button(onClick = onClick) {
             Text("Отправить сообщение")
         }
-        /*Row(
+        Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.End
         ) {
             Text(text = "Длительность точки, мс.")
             TextField(
-                value = dotDuration.toString(),
+                value = dotDuration,
                 onValueChange = onDotDurationChange,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true
             )
-        }*/
+        }
     }
 }
 
@@ -74,7 +79,7 @@ fun MorseScreenPreview() {
             message = "Message",
             onMessageChange = {},
             onClick = {},
-            dotDuration = 200,
+            dotDuration = "200",
             onDotDurationChange = {}
         )
     }
