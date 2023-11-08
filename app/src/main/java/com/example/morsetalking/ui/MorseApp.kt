@@ -28,7 +28,7 @@ fun MorseApp(
         message = viewModel.message,
         dotDuration = viewModel.dotDuration,
         onMessageChange = { viewModel.changeMessage(it) },
-        onClick = { viewModel.sendMessage(context) },
+        onClick = { viewModel.sendAudioMessage(context) },
         onDotDurationChange = { viewModel.changeDotDuration(it) }
     )
 }
