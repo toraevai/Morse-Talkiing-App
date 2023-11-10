@@ -25,14 +25,41 @@ class MorseScreenViewModel @Inject constructor(
     var message by mutableStateOf("")
         private set
 
-    var dotDuration by mutableStateOf("200")
+    var dotDuration by mutableStateOf("100")
+        private set
+
+    var sendAudioMessage by mutableStateOf(false)
+        private set
+
+    var sendVisibleMessage by mutableStateOf(true)
         private set
 
     fun changeMessage(text: String) {
         message = text
     }
 
+    fun changeAudioSending() {
+        sendAudioMessage = !sendAudioMessage
+    }
+
+    fun changeVisibleSending() {
+        sendVisibleMessage = !sendVisibleMessage
+    }
+
     fun sendMessage(context: Context) {
+        when {
+            sendAudioMessage && sendVisibleMessage -> {
+                sendAudioMessage(context)
+                sendVisibleMessage(context)
+            }
+
+            sendAudioMessage -> sendAudioMessage(context)
+            sendVisibleMessage -> sendVisibleMessage(context)
+        }
+
+    }
+
+    private fun sendVisibleMessage(context: Context) {
         if (dotDuration.isEmpty() || dotDuration.toInt() < 100) {
             Toast.makeText(context, "Длительность не может быть меньше 100мс.", Toast.LENGTH_SHORT)
                 .show()
@@ -63,16 +90,18 @@ class MorseScreenViewModel @Inject constructor(
         }
     }
 
-    fun sendAudioMessage(context: Context) {
+    private fun sendAudioMessage(context: Context) {
         if (dotDuration.isEmpty() || dotDuration.toInt() < 100) {
             Toast.makeText(context, "Длительность не может быть меньше 100мс.", Toast.LENGTH_SHORT)
                 .show()
         } else {
             viewModelScope.launch {
-                val mediaPlayer = MediaPlayer.create(context, R.raw.dot_sound)
+                val mediaPlayer = MediaPlayer.create(context, R.raw.dot_sound_1sec)
+                mediaPlayer.isLooping = true
                 for (symbol in message) {
                     if (symbol.toString().contains(" ")) {
                         mediaPlayer.pause()
+                        mediaPlayer.seekTo(0)
                         delay(7 * dotDuration.toLong())
                     } else {
                         val morseCode: String = symbols.find {
@@ -81,6 +110,7 @@ class MorseScreenViewModel @Inject constructor(
                         for (morseSymbol in morseCode) {
                             if (morseSymbol.toString().contains("0")) {
                                 mediaPlayer.pause()
+                                mediaPlayer.seekTo(0)
                                 delay(dotDuration.toLong())
                             } else {
                                 mediaPlayer.start()
@@ -89,6 +119,7 @@ class MorseScreenViewModel @Inject constructor(
                         }
                     }
                     mediaPlayer.pause()
+                    mediaPlayer.seekTo(0)
                     delay(dotDuration.toLong() * 3)
                 }
                 mediaPlayer.release()
