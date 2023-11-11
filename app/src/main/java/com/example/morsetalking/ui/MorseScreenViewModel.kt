@@ -21,7 +21,7 @@ class MorseScreenViewModel @Inject constructor(
     private val morsePlayer: MorsePlayer
 ) : ViewModel() {
 
-    var message by mutableStateOf("")
+    var userMessage by mutableStateOf("")
         private set
 
     var dotDuration by mutableStateOf("100")
@@ -36,7 +36,7 @@ class MorseScreenViewModel @Inject constructor(
     val snackbarHostState = SnackbarHostState()
 
     fun changeMessage(text: String) {
-        message = text
+        userMessage = text
     }
 
     fun changeAudioSending() {
@@ -47,22 +47,31 @@ class MorseScreenViewModel @Inject constructor(
         sendVisibleMessage = !sendVisibleMessage
     }
 
-    fun sendMessage() {
+    fun sendUserMessage() {
         when {
             sendAudioMessage && sendVisibleMessage -> {
-                sendAudioMessage()
-                sendVisibleMessage()
+                sendAudioMessage(userMessage)
+                sendVisibleMessage(userMessage)
             }
-
-            sendAudioMessage -> sendAudioMessage()
-            sendVisibleMessage -> sendVisibleMessage()
+            sendAudioMessage -> sendAudioMessage(userMessage)
+            sendVisibleMessage -> sendVisibleMessage(userMessage)
         }
     }
 
-    private fun sendVisibleMessage() {
-        if (dotDuration.isEmpty() || dotDuration.toInt() < 100) {
-            viewModelScope.launch { snackbarHostState.showSnackbar("Длительность не может быть меньше 100мс.") }
-        } else {
+    fun sendSOS() {
+        val message = "SOS"
+        when {
+            sendAudioMessage && sendVisibleMessage -> {
+                sendAudioMessage(message)
+                sendVisibleMessage(message)
+            }
+            sendAudioMessage -> sendAudioMessage(message)
+            sendVisibleMessage -> sendVisibleMessage(message)
+        }
+    }
+
+    private fun sendVisibleMessage(message: String) {
+        if (checkConditionsForSendMessage()) {
             viewModelScope.launch {
                 for (symbol in message) {
                     if (symbol.toString().contains(" ")) {
@@ -89,12 +98,9 @@ class MorseScreenViewModel @Inject constructor(
         }
     }
 
-    private fun sendAudioMessage() {
-        if (dotDuration.isEmpty() || dotDuration.toInt() < 100) {
-            viewModelScope.launch { snackbarHostState.showSnackbar("Длительность не может быть меньше 100мс.") }
-        } else {
+    private fun sendAudioMessage(message: String) {
+        if (checkConditionsForSendMessage()) {
             viewModelScope.launch {
-
                 for (symbol in message) {
                     if (symbol.toString().contains(" ")) {
                         morsePlayer.pausePlayerAndSeekToBeginning()
@@ -122,6 +128,13 @@ class MorseScreenViewModel @Inject constructor(
 
     fun changeDotDuration(duration: String) {
         dotDuration = duration
+    }
+
+    private fun checkConditionsForSendMessage(): Boolean {
+        return if (dotDuration.isEmpty() || dotDuration.toInt() < 100) {
+            viewModelScope.launch { snackbarHostState.showSnackbar("Длительность не может быть меньше 100мс.") }
+            false
+        } else true
     }
 
     override fun onCleared() {

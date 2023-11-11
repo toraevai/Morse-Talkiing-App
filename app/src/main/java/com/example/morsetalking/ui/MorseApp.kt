@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LargeFloatingActionButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -35,13 +37,14 @@ fun MorseApp(
     viewModel: MorseScreenViewModel
 ) {
     Scaffold(
+        floatingActionButton = { MorseFloatingActionBar(onClick = { viewModel.sendSOS() }) },
         snackbarHost = { SnackbarHost(hostState = viewModel.snackbarHostState) }
     ) { contentPadding ->
         MorseScreen(
-            message = viewModel.message,
+            message = viewModel.userMessage,
             dotDuration = viewModel.dotDuration,
             onMessageChange = { viewModel.changeMessage(it) },
-            sendMessage = { viewModel.sendMessage() },
+            sendMessage = { viewModel.sendUserMessage() },
             onDotDurationChange = { viewModel.changeDotDuration(it) },
             sendAudioMessage = viewModel.sendAudioMessage,
             changeAudioSending = { viewModel.changeAudioSending() },
@@ -160,6 +163,16 @@ fun MorseScreen(
                     }
             }
         )
+    }
+}
+
+@Composable
+fun MorseFloatingActionBar(onClick: () -> Unit) {
+    LargeFloatingActionButton(
+        onClick = { onClick() },
+        shape = CircleShape,
+    ) {
+        Text(text = "SOS")
     }
 }
 
