@@ -1,15 +1,14 @@
 package com.example.morsetalking.ui
 
-import android.media.MediaPlayer
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.morsetalking.R
 import com.example.morsetalking.camera.MorseCamera
 import com.example.morsetalking.data.symbols
+import com.example.morsetalking.player.MorsePlayer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -18,7 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MorseScreenViewModel @Inject constructor(
-    private val morseCamera: MorseCamera
+    private val morseCamera: MorseCamera,
+    private val morsePlayer: MorsePlayer
 ) : ViewModel() {
 
     var message by mutableStateOf("")
@@ -94,12 +94,10 @@ class MorseScreenViewModel @Inject constructor(
             viewModelScope.launch { snackbarHostState.showSnackbar("Длительность не может быть меньше 100мс.") }
         } else {
             viewModelScope.launch {
-                val mediaPlayer = MediaPlayer.create(context, R.raw.dot_sound_1sec)
-                mediaPlayer.isLooping = true
+
                 for (symbol in message) {
                     if (symbol.toString().contains(" ")) {
-                        mediaPlayer.pause()
-                        mediaPlayer.seekTo(0)
+                        morsePlayer.pausePlayerAndSeekToBeginning()
                         delay(7 * dotDuration.toLong())
                     } else {
                         val morseCode: String = symbols.find {
@@ -107,25 +105,27 @@ class MorseScreenViewModel @Inject constructor(
                         }!!.code
                         for (morseSymbol in morseCode) {
                             if (morseSymbol.toString().contains("0")) {
-                                mediaPlayer.pause()
-                                mediaPlayer.seekTo(0)
+                                morsePlayer.pausePlayerAndSeekToBeginning()
                                 delay(dotDuration.toLong())
                             } else {
-                                mediaPlayer.start()
+                                morsePlayer.startPlayer()
                                 delay(dotDuration.toLong())
                             }
                         }
                     }
-                    mediaPlayer.pause()
-                    mediaPlayer.seekTo(0)
+                    morsePlayer.pausePlayerAndSeekToBeginning()
                     delay(dotDuration.toLong() * 3)
                 }
-                mediaPlayer.release()
             }
         }
     }
 
     fun changeDotDuration(duration: String) {
         dotDuration = duration
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        morsePlayer.releasePlayer()
     }
 }
