@@ -1,8 +1,7 @@
 package com.example.morsetalking.ui
 
-import android.content.Context
 import android.media.MediaPlayer
-import android.widget.Toast
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -34,6 +33,8 @@ class MorseScreenViewModel @Inject constructor(
     var sendVisibleMessage by mutableStateOf(true)
         private set
 
+    val snackbarHostState = SnackbarHostState()
+
     fun changeMessage(text: String) {
         message = text
     }
@@ -46,23 +47,21 @@ class MorseScreenViewModel @Inject constructor(
         sendVisibleMessage = !sendVisibleMessage
     }
 
-    fun sendMessage(context: Context) {
+    fun sendMessage() {
         when {
             sendAudioMessage && sendVisibleMessage -> {
-                sendAudioMessage(context)
-                sendVisibleMessage(context)
+                sendAudioMessage()
+                sendVisibleMessage()
             }
 
-            sendAudioMessage -> sendAudioMessage(context)
-            sendVisibleMessage -> sendVisibleMessage(context)
+            sendAudioMessage -> sendAudioMessage()
+            sendVisibleMessage -> sendVisibleMessage()
         }
-
     }
 
-    private fun sendVisibleMessage(context: Context) {
+    private fun sendVisibleMessage() {
         if (dotDuration.isEmpty() || dotDuration.toInt() < 100) {
-            Toast.makeText(context, "Длительность не может быть меньше 100мс.", Toast.LENGTH_SHORT)
-                .show()
+            viewModelScope.launch { snackbarHostState.showSnackbar("Длительность не может быть меньше 100мс.") }
         } else {
             viewModelScope.launch {
                 for (symbol in message) {
@@ -90,10 +89,9 @@ class MorseScreenViewModel @Inject constructor(
         }
     }
 
-    private fun sendAudioMessage(context: Context) {
+    private fun sendAudioMessage() {
         if (dotDuration.isEmpty() || dotDuration.toInt() < 100) {
-            Toast.makeText(context, "Длительность не может быть меньше 100мс.", Toast.LENGTH_SHORT)
-                .show()
+            viewModelScope.launch { snackbarHostState.showSnackbar("Длительность не может быть меньше 100мс.") }
         } else {
             viewModelScope.launch {
                 val mediaPlayer = MediaPlayer.create(context, R.raw.dot_sound_1sec)

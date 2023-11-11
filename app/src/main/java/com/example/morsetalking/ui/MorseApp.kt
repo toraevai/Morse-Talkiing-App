@@ -11,13 +11,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -28,22 +29,27 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.morsetalking.ui.theme.MorseTalkingTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MorseApp(
     viewModel: MorseScreenViewModel
 ) {
-    val context = LocalContext.current
-    MorseScreen(
-        message = viewModel.message,
-        dotDuration = viewModel.dotDuration,
-        onMessageChange = { viewModel.changeMessage(it) },
-        sendMessage = { viewModel.sendMessage(context) },
-        onDotDurationChange = { viewModel.changeDotDuration(it) },
-        sendAudioMessage = viewModel.sendAudioMessage,
-        changeAudioSending = { viewModel.changeAudioSending() },
-        sendVisibleMessage = viewModel.sendVisibleMessage,
-        changeVisibleSending = { viewModel.changeVisibleSending() }
-    )
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = viewModel.snackbarHostState) }
+    ) { contentPadding ->
+        MorseScreen(
+            message = viewModel.message,
+            dotDuration = viewModel.dotDuration,
+            onMessageChange = { viewModel.changeMessage(it) },
+            sendMessage = { viewModel.sendMessage() },
+            onDotDurationChange = { viewModel.changeDotDuration(it) },
+            sendAudioMessage = viewModel.sendAudioMessage,
+            changeAudioSending = { viewModel.changeAudioSending() },
+            sendVisibleMessage = viewModel.sendVisibleMessage,
+            changeVisibleSending = { viewModel.changeVisibleSending() },
+            modifier = Modifier.padding(contentPadding)
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,7 +63,8 @@ fun MorseScreen(
     sendAudioMessage: Boolean,
     changeAudioSending: (Boolean) -> Unit,
     sendVisibleMessage: Boolean,
-    changeVisibleSending: (Boolean) -> Unit
+    changeVisibleSending: (Boolean) -> Unit,
+    modifier: Modifier
 ) {
     val stringWithHyperText = buildAnnotatedString {
         val text = "\tВ соответствии с Википедией, в стандартном коде Морзе за единицу времени " +
@@ -85,7 +92,7 @@ fun MorseScreen(
     }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(all = 10.dp)
+        modifier = modifier.padding(all = 10.dp)
     ) {
         TextField(
             value = message,
@@ -169,7 +176,8 @@ fun MorseScreenPreview() {
             sendAudioMessage = false,
             changeAudioSending = {},
             sendVisibleMessage = true,
-            changeVisibleSending = {}
+            changeVisibleSending = {},
+            modifier = Modifier
         )
     }
 }
