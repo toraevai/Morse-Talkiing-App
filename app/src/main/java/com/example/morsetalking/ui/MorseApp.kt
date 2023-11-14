@@ -15,6 +15,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -22,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.morsetalking.R
 import com.example.morsetalking.ui.theme.MorseTalkingTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,23 +39,19 @@ import com.example.morsetalking.ui.theme.MorseTalkingTheme
 fun MorseApp(
     viewModel: MorseScreenViewModel
 ) {
-    Scaffold(
-        floatingActionButton = { MorseFloatingActionBar(onClick = { viewModel.sendSOS() }) },
-        snackbarHost = { SnackbarHost(hostState = viewModel.snackbarHostState) }
-    ) { contentPadding ->
-        MorseScreen(
-            message = viewModel.userMessage,
-            dotDuration = viewModel.dotDuration,
-            onMessageChange = { viewModel.changeMessage(it) },
-            sendMessage = { viewModel.sendUserMessage() },
-            onDotDurationChange = { viewModel.changeDotDuration(it) },
-            sendAudioMessage = viewModel.sendAudioMessage,
-            changeAudioSending = { viewModel.changeAudioSending() },
-            sendVisibleMessage = viewModel.sendVisibleMessage,
-            changeVisibleSending = { viewModel.changeVisibleSending() },
-            modifier = Modifier.padding(contentPadding)
-        )
-    }
+    MorseScreen(
+        message = viewModel.userMessage,
+        dotDuration = viewModel.dotDuration,
+        sendSOS = { viewModel.sendSOS() },
+        snackbarHostState = viewModel.snackbarHostState,
+        onMessageChange = { viewModel.changeMessage(it) },
+        sendMessage = { viewModel.sendUserMessage() },
+        onDotDurationChange = { viewModel.changeDotDuration(it) },
+        sendAudioMessage = viewModel.sendAudioMessage,
+        changeAudioSending = { viewModel.changeAudioSending() },
+        sendVisibleMessage = viewModel.sendVisibleMessage,
+        changeVisibleSending = { viewModel.changeVisibleSending() }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,27 +59,25 @@ fun MorseApp(
 fun MorseScreen(
     message: String,
     dotDuration: String,
+    sendSOS: () -> Unit,
+    snackbarHostState: SnackbarHostState,
     onMessageChange: (String) -> Unit,
     sendMessage: () -> Unit,
     onDotDurationChange: (String) -> Unit,
     sendAudioMessage: Boolean,
     changeAudioSending: (Boolean) -> Unit,
     sendVisibleMessage: Boolean,
-    changeVisibleSending: (Boolean) -> Unit,
-    modifier: Modifier
+    changeVisibleSending: (Boolean) -> Unit
 ) {
     val stringWithHyperText = buildAnnotatedString {
-        val text = "\tВ соответствии с Википедией, в стандартном коде Морзе за единицу времени " +
-                "принимается длительность самого короткого сигнала — точки. Длительность тире " +
-                "равна трём точкам. Пауза между элементами одного знака — одна точка, между " +
-                "знаками в слове — 3 точки, между словами — 7 точек."
-        val textWithLink = "Википедией"
+        val text = stringResource(R.string.background_information)
+        val textWithLink = stringResource(R.string.text_with_link)
         val startIndex = text.indexOf(textWithLink)
         val endIndex = startIndex + textWithLink.length
         append(text)
         addStringAnnotation(
             "URL",
-            "https://ru.wikipedia.org/wiki/Азбука_Морзе",
+            stringResource(R.string.URL),
             start = startIndex,
             end = endIndex
         )
@@ -93,76 +90,84 @@ fun MorseScreen(
             end = endIndex
         )
     }
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.padding(all = 10.dp)
-    ) {
-        TextField(
-            value = message,
-            onValueChange = onMessageChange,
-            label = { Text(text = "Введите сообщение") },
+    Scaffold(
+        floatingActionButton = { MorseFloatingActionBar(onClick = { sendSOS() }) },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { contentPadding ->
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .fillMaxWidth()
-        )
-        Button(onClick = sendMessage) {
-            Text("Отправить сообщение")
-        }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.End
+                .padding(contentPadding)
+                .padding(all = 10.dp)
         ) {
-            Text(
-                text = "Длительность точки, мс.",
-                modifier = Modifier.weight(4f)
-            )
             TextField(
-                value = dotDuration,
-                onValueChange = onDotDurationChange,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                modifier = Modifier.weight(1f)
+                value = message,
+                onValueChange = onMessageChange,
+                label = { Text(text = stringResource(R.string.enter_message_label)) },
+                modifier = Modifier
+                    .fillMaxWidth()
             )
-        }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.End
-        ) {
-            Text(
-                text = "Отправить сообщение по звуковому каналу",
-                modifier = Modifier.weight(1f)
-            )
-            Switch(
-                checked = sendAudioMessage,
-                onCheckedChange = changeAudioSending
-            )
-        }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.End
-        ) {
-            Text(
-                text = "Отправить сообщение по видимому каналу",
-                modifier = Modifier.weight(1f)
-            )
-            Switch(
-                checked = sendVisibleMessage,
-                onCheckedChange = changeVisibleSending
-            )
-        }
-
-        val uriHandler = LocalUriHandler.current
-
-        ClickableText(
-            text = stringWithHyperText,
-            style = LocalTextStyle.current.copy(textAlign = TextAlign.Justify),
-            onClick = {
-                stringWithHyperText
-                    .getStringAnnotations("URL", it, it)
-                    .firstOrNull()?.let { stringAnnotation ->
-                        uriHandler.openUri(stringAnnotation.item)
-                    }
+            Button(onClick = sendMessage) {
+                Text(stringResource(R.string.button_send_message))
             }
-        )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = stringResource(R.string.dot_duration),
+                    modifier = Modifier.weight(4f)
+                )
+                TextField(
+                    value = dotDuration,
+                    onValueChange = onDotDurationChange,
+                    textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = stringResource(R.string.send_message_audio),
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(
+                    checked = sendAudioMessage,
+                    onCheckedChange = changeAudioSending
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = stringResource(R.string.send_message_visio),
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(
+                    checked = sendVisibleMessage,
+                    onCheckedChange = changeVisibleSending
+                )
+            }
+
+            val uriHandler = LocalUriHandler.current
+
+            ClickableText(
+                text = stringWithHyperText,
+                style = LocalTextStyle.current.copy(textAlign = TextAlign.Justify),
+                onClick = {
+                    stringWithHyperText
+                        .getStringAnnotations("URL", it, it)
+                        .firstOrNull()?.let { stringAnnotation ->
+                            uriHandler.openUri(stringAnnotation.item)
+                        }
+                }
+            )
+        }
     }
 }
 
@@ -179,18 +184,21 @@ fun MorseFloatingActionBar(onClick: () -> Unit) {
 @Preview(showSystemUi = true)
 @Composable
 fun MorseScreenPreview() {
+    val snackbarHostState = SnackbarHostState()
+
     MorseTalkingTheme {
         MorseScreen(
             message = "Message",
+            dotDuration = "100",
+            sendSOS = {},
+            snackbarHostState = snackbarHostState,
             onMessageChange = {},
             sendMessage = {},
-            dotDuration = "100",
             onDotDurationChange = {},
             sendAudioMessage = false,
             changeAudioSending = {},
             sendVisibleMessage = true,
-            changeVisibleSending = {},
-            modifier = Modifier
+            changeVisibleSending = {}
         )
     }
 }

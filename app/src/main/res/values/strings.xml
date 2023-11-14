@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">MorseTalking</string>
+    <string name="background_information">"\tAccording to Wikipedia, the duration of a dah is three times the duration of a dit (although some telegraphers deliberately exaggerate the length of a dah for clearer signalling). Each dit or dah within an encoded character is followed by a period of signal absence, called a space, equal to the dit duration. The letters of a word are separated by a space of duration equal to three dits, and words are separated by a space equal to seven dits</string>
+    <string name="text_with_link">Wikipedia</string>
+    <string name="URL">https://en.wikipedia.org/wiki/Morse_code</string>
+    <string name="enter_message_label">Enter message</string>
+    <string name="button_send_message">Send message</string>
+    <string name="dot_duration">Dot duration, ms.</string>
+    <string name="send_message_audio">Send a message via a audio channel</string>
+    <string name="send_message_visio">Send a message via a visible channel</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.example.morsetalking.ui
 
+import android.util.Log
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,10 +11,13 @@ import com.example.morsetalking.camera.MorseCamera
 import com.example.morsetalking.data.symbols
 import com.example.morsetalking.player.MorsePlayer
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
+private const val TAG = "MyApp"
 
 @HiltViewModel
 class MorseScreenViewModel @Inject constructor(
@@ -35,9 +39,16 @@ class MorseScreenViewModel @Inject constructor(
 
     val snackbarHostState = SnackbarHostState()
 
+    private var sendSOSMessage = true
+        private set
+
     fun changeMessage(text: String) {
         userMessage = text
     }
+
+    /*fun changeSendingOfSOS() {
+        sendSOSMessage = !sendSOSMessage
+    }*/
 
     fun changeAudioSending() {
         sendAudioMessage = !sendAudioMessage
@@ -50,78 +61,89 @@ class MorseScreenViewModel @Inject constructor(
     fun sendUserMessage() {
         when {
             sendAudioMessage && sendVisibleMessage -> {
-                sendAudioMessage(userMessage)
-                sendVisibleMessage(userMessage)
+                sendAudioMessage(userMessage, false)
+                sendVisibleMessage(userMessage, false)
             }
-            sendAudioMessage -> sendAudioMessage(userMessage)
-            sendVisibleMessage -> sendVisibleMessage(userMessage)
+
+            sendAudioMessage -> sendAudioMessage(userMessage, false)
+            sendVisibleMessage -> sendVisibleMessage(userMessage, false)
         }
     }
 
     fun sendSOS() {
         val message = "SOS"
+        sendSOSMessage = !sendSOSMessage
+        Log.d(TAG, "send sos message = $sendSOSMessage")
         when {
             sendAudioMessage && sendVisibleMessage -> {
-                sendAudioMessage(message)
-                sendVisibleMessage(message)
+                sendAudioMessage(message, sendSOSMessage)
+                sendVisibleMessage(message, sendSOSMessage)
             }
-            sendAudioMessage -> sendAudioMessage(message)
-            sendVisibleMessage -> sendVisibleMessage(message)
+
+            sendAudioMessage -> sendAudioMessage(message, sendSOSMessage)
+            sendVisibleMessage -> sendVisibleMessage(message, sendSOSMessage)
         }
     }
 
-    private fun sendVisibleMessage(message: String) {
+    private fun sendVisibleMessage(message: String, sendCyclically: Boolean) {
         if (checkConditionsForSendMessage()) {
             viewModelScope.launch {
-                for (symbol in message) {
-                    if (symbol.toString().contains(" ")) {
-                        morseCamera.disableFlashLight()
-                        delay(7 * dotDuration.toLong())
-                    } else {
-                        val morseCode: String = symbols.find {
-                            it.symbol.contains(symbol.uppercase())
-                        }!!.code
-                        for (morseSymbol in morseCode) {
-                            if (morseSymbol.toString().contains("0")) {
+                if (sendCyclically) {
+                    while (true) {
+                        for (symbol in message) {
+                            if (symbol.toString().contains(" ")) {
                                 morseCamera.disableFlashLight()
-                                delay(dotDuration.toLong())
+                                delay(7 * dotDuration.toLong())
                             } else {
-                                morseCamera.enableFlashLight()
-                                delay(dotDuration.toLong())
+                                val morseCode: String = symbols.find {
+                                    it.symbol.contains(symbol.uppercase())
+                                }!!.code
+                                for (morseSymbol in morseCode) {
+                                    if (morseSymbol.toString().contains("0")) {
+                                        morseCamera.disableFlashLight()
+                                        delay(dotDuration.toLong())
+                                    } else {
+                                        morseCamera.enableFlashLight()
+                                        delay(dotDuration.toLong())
+                                    }
+                                }
                             }
+                            morseCamera.disableFlashLight()
+                            delay(dotDuration.toLong() * 3)
                         }
+                        Log.d(TAG, "send cyclically = $sendCyclically")
                     }
-                    morseCamera.disableFlashLight()
-                    delay(dotDuration.toLong() * 3)
-                }
+                } else this.cancel()
             }
         }
     }
 
-    private fun sendAudioMessage(message: String) {
+    private fun sendAudioMessage(message: String, sendCyclically: Boolean) {
         if (checkConditionsForSendMessage()) {
             viewModelScope.launch {
-                for (symbol in message) {
-                    if (symbol.toString().contains(" ")) {
-                        morsePlayer.pausePlayerAndSeekToBeginning()
-                        delay(7 * dotDuration.toLong())
-                    } else {
-                        val morseCode: String = symbols.find {
-                            it.symbol.contains(symbol.uppercase())
-                        }!!.code
-                        for (morseSymbol in morseCode) {
-                            if (morseSymbol.toString().contains("0")) {
-                                morsePlayer.pausePlayerAndSeekToBeginning()
-                                delay(dotDuration.toLong())
-                            } else {
-                                morsePlayer.startPlayer()
-                                delay(dotDuration.toLong())
+                do {
+                    for (symbol in message) {
+                        if (symbol.toString().contains(" ")) {
+                            morsePlayer.pausePlayerAndSeekToBeginning()
+                            delay(7 * dotDuration.toLong())
+                        } else {
+                            val morseCode: String = symbols.find {
+                                it.symbol.contains(symbol.uppercase())
+                            }!!.code
+                            for (morseSymbol in morseCode) {
+                                if (morseSymbol.toString().contains("0")) {
+                                    morsePlayer.pausePlayerAndSeekToBeginning()
+                                    delay(dotDuration.toLong())
+                                } else {
+                                    morsePlayer.startPlayer()
+                                    delay(dotDuration.toLong())
+                                }
                             }
                         }
+                        morsePlayer.pausePlayerAndSeekToBeginning()
+                        delay(dotDuration.toLong() * 3)
                     }
-                    morsePlayer.pausePlayerAndSeekToBeginning()
-                    delay(dotDuration.toLong() * 3)
-                }
+                } while (sendCyclically)
             }
         }
     }
@@ -131,8 +153,8 @@ class MorseScreenViewModel @Inject constructor(
     }
 
     private fun checkConditionsForSendMessage(): Boolean {
-        return if (dotDuration.isEmpty() || dotDuration.toInt() < 100) {
-            viewModelScope.launch { snackbarHostState.showSnackbar("Длительность не может быть меньше 100мс.") }
+        return if (dotDuration.isEmpty() || dotDuration.toInt() < 10) {
+            viewModelScope.launch { snackbarHostState.showSnackbar("Длительность не может быть меньше 10мс.") }
             false
         } else true
     }

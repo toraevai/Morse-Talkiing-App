@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">MorseTalking</string>
+    <string name="background_information">\tВ соответствии с Википедией, в стандартном коде Морзе за единицу времени принимается длительность самого короткого сигнала — точки. Длительность тире равна трём точкам. Пауза между элементами одного знака — одна точка, между знаками в слове — 3 точки, между словами — 7 точек.</string>
+    <string name="text_with_link">Википедией</string>
+    <string name="URL">https://ru.wikipedia.org/wiki/Азбука_Морзе</string>
+    <string name="enter_message_label">Введите сообщение</string>
+    <string name="button_send_message">Отправить сообщение</string>
+    <string name="dot_duration">Длительность точки, мс.</string>
+    <string name="send_message_audio">Отправить сообщение по звуковому каналу</string>
+    <string name="send_message_visio">Отправить сообщение по видимому каналу</string>
+</resources>
